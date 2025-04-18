@@ -16,6 +16,7 @@ import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
 import { Separator } from 'src/ui/separator';
 import { Text } from 'src/ui/text';
+import clsx from 'clsx';
 
 type Props = {
 	state: ArticleStateType;
@@ -23,69 +24,69 @@ type Props = {
 };
 
 export const ArticleParamsForm = ({ state, setState }: Props) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const [font, setFont] = useState(state.fontFamilyOption);
-	const [size, setSize] = useState(state.fontSizeOption);
+	const [isFormOpen, setIsFormOpen] = useState(false);
+	const [fontFamily, setFontFamily] = useState(state.fontFamilyOption);
+	const [fontSize, setFontSize] = useState(state.fontSizeOption);
 	const [fontColor, setFontColor] = useState(state.fontColor);
 	const [bgColor, setBgColor] = useState(state.backgroundColor);
-	const [width, setWidth] = useState(state.contentWidth);
+	const [widthContent, setWidthContent] = useState(state.contentWidth);
 	const formRef = useRef<HTMLFormElement>(null);
 
-	const toggle = useCallback(() => {
-		setIsOpen((prev) => !prev);
+	const toggleSidebar = useCallback(() => {
+		setIsFormOpen((prev) => !prev);
 	}, []);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		setState({
 			...state,
-			fontFamilyOption: font,
+			fontFamilyOption: fontFamily,
 			fontColor: fontColor,
 			backgroundColor: bgColor,
-			contentWidth: width,
-			fontSizeOption: size,
+			contentWidth: widthContent,
+			fontSizeOption: fontSize,
 		});
-		setIsOpen(false);
+		setIsFormOpen(false);
 	};
 
 	const handleReset = () => {
-		setFont(defaultArticleState.fontFamilyOption);
-		setSize(defaultArticleState.fontSizeOption);
+		setFontFamily(defaultArticleState.fontFamilyOption);
+		setFontSize(defaultArticleState.fontSizeOption);
 		setFontColor(defaultArticleState.fontColor);
 		setBgColor(defaultArticleState.backgroundColor);
-		setWidth(defaultArticleState.contentWidth);
+		setWidthContent(defaultArticleState.contentWidth);
 
 		setState(defaultArticleState);
 	};
 
 	const handleClickOutside = useCallback((e: MouseEvent) => {
-		!formRef.current?.contains(e.target as Node) && toggle();
+		!formRef.current?.contains(e.target as Node) && toggleSidebar();
 	}, []);
 
 	const handleEsc = useCallback((e: KeyboardEvent) => {
-		e.key === 'Escape' && toggle();
+		e.key === 'Escape' && toggleSidebar();
 	}, []);
 
 	useEffect(() => {
-		if (isOpen) {
+		if (isFormOpen) {
 			document.addEventListener('mousedown', handleClickOutside);
 			document.addEventListener('keydown', handleEsc);
 		} else {
 			document.removeEventListener('mousedown', handleClickOutside);
 			document.removeEventListener('keydown', handleEsc);
 		}
-	}, [isOpen]);
+		return () => {
+			document.removeEventListener('mousedown', handleClickOutside);
+			document.removeEventListener('keydown', handleEsc);
+		};
+	}, [isFormOpen]);
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={toggle} />
+			<ArrowButton isOpen={isFormOpen} onClick={toggleSidebar} />
 			<aside
 				ref={formRef}
-				className={
-					!isOpen
-						? styles.container
-						: `${styles.container} ${styles.container_open}`
-				}>
+				className={clsx(styles.container, isFormOpen && styles.container_open)}>
 				<form
 					className={styles.form}
 					onSubmit={handleSubmit}
@@ -102,17 +103,17 @@ export const ArticleParamsForm = ({ state, setState }: Props) => {
 					</Text>
 
 					<Select
-						selected={font}
+						selected={fontFamily}
 						options={fontFamilyOptions}
 						title='шрифт'
-						onChange={setFont}
+						onChange={setFontFamily}
 					/>
 					<RadioGroup
 						title='размер шрифта'
 						options={fontSizeOptions}
-						selected={size}
+						selected={fontSize}
 						name='fontSize'
-						onChange={setSize}
+						onChange={setFontSize}
 					/>
 					<Select
 						selected={fontColor}
@@ -128,10 +129,10 @@ export const ArticleParamsForm = ({ state, setState }: Props) => {
 						onChange={setBgColor}
 					/>
 					<Select
-						selected={width}
+						selected={widthContent}
 						options={contentWidthArr}
 						title='ширина контента'
-						onChange={setWidth}
+						onChange={setWidthContent}
 					/>
 					<div className={styles.bottomContainer}>
 						<Button title='Сбросить' htmlType='reset' type='clear' />
